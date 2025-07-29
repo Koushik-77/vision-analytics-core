@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { campaignData, CampaignData } from '@/lib/mockData';
-import { Search, ArrowUpDown } from 'lucide-react';
+import { Search, ArrowUpDown, Download } from 'lucide-react';
 
 type SortField = keyof CampaignData;
 type SortDirection = 'asc' | 'desc';
@@ -51,6 +51,30 @@ export function CampaignsTable() {
       return 0;
     });
 
+  const handleExport = () => {
+    const headers = ['Campaign Name', 'Status', 'Impressions', 'Clicks', 'Conversions', 'CTR (%)', 'CPC ($)', 'Spend ($)'];
+    const csvData = filteredAndSortedData.map(campaign => [
+      campaign.name,
+      campaign.status,
+      campaign.impressions,
+      campaign.clicks,
+      campaign.conversions,
+      campaign.ctr,
+      campaign.cpc,
+      campaign.spend
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `campaign-performance-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -73,14 +97,26 @@ export function CampaignsTable() {
             <p className="text-sm text-muted-foreground">Detailed metrics for all campaigns</p>
           </div>
           
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-            />
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleExport}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </Button>
+            
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search campaigns..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
           </div>
         </div>
 
